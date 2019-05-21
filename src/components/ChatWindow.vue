@@ -13,7 +13,7 @@
                     <label>Enter message</label>
                     <textarea class="form-control" id="message"></textarea>
                     <br>
-                    <input type="submit" class="btn btn-primary" value="Send Message"/>
+                    <button v-on:click="sendMessage" class="btn btn-primary" type="button">Send Message</button>
                 </div>
             </form>
         </div>
@@ -21,19 +21,31 @@
 </template>
 
 <script>
+    import io from 'socket.io-client';
     export default {
         name: "ChatWindow",
         mounted() {
             this.$root.$on('showChatWindow', (userName) => {
                 // this.userName = userName;
                 const chatWindow = document.getElementById('messageArea');
-                chatWindow.classList.remove('windowHide');
-                chatWindow.classList.add('windowShow');
-                console.log(userName + 'chatwindow');
+                this.openConnection(userName, chatWindow);
             })
         },
         methods: {
+            openConnection(userName, chatWindow) {
+                const socket = io.connect('http://localhost:8081/');
+                socket.emit('new user', userName, (data) => {
+                    console.log(userName);
+                    if (data) {
+                        chatWindow.classList.remove('windowHide');
+                        chatWindow.classList.add('windowShow');
+                        console.log(data + " from server");
+                    }
+                })
+            },
+            sendMessage() {
 
+            }
         }
     }
 </script>
