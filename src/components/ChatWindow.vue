@@ -7,11 +7,13 @@
             </div>
         </div>
         <div class="col-md-8">
-            <div class="chat" id="chat"></div>
+            <div v-for="msg in messages" :key="msg.msgId" class="chat" id="chat">
+                <div :for="msg.msgId" class="messages">{{ msg.messageText }}</div>
+            </div>
             <form id="messageForm">
                 <div class="form-group">
-                    <label>Enter message</label>
-                    <textarea class="form-control" id="message"></textarea>
+                    <label for="message">Enter message</label>
+                    <textarea v-model="message" class="form-control" id="message"></textarea>
                     <br>
                     <button v-on:click="sendMessage" class="btn btn-primary" type="button">Send Message</button>
                 </div>
@@ -21,19 +23,21 @@
 </template>
 
 <script>
+    const socket = io.connect('http://localhost:8081/');
     import io from 'socket.io-client';
     export default {
         name: "ChatWindow",
         mounted() {
             this.$root.$on('showChatWindow', (userName) => {
-                // this.userName = userName;
                 const chatWindow = document.getElementById('messageArea');
                 this.openConnection(userName, chatWindow);
-            })
+            });
+            socket.on('new message', (data) => {
+                this.addNewMessage(data);
+            });
         },
         methods: {
             openConnection(userName, chatWindow) {
-                const socket = io.connect('http://localhost:8081/');
                 socket.emit('new user', userName, (data) => {
                     console.log(userName);
                     if (data) {
@@ -44,7 +48,21 @@
                 })
             },
             sendMessage() {
-
+                socket.emit('send message', this.message);
+            },
+            addNewMessage(data) {
+                this.messages.push({
+                    msgId: ++this.counter,
+                    messageText: data.message,
+                    user: data.username
+                })
+            }
+        },
+        data() {
+            return {
+                counter: 0,
+                message: null,
+                messages: []
             }
         }
     }
