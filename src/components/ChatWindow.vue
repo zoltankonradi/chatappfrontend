@@ -8,7 +8,7 @@
         </div>
         <div class="col-md-8">
             <div v-for="msg in messages" :key="msg.msgId" class="chat" id="chat">
-                <div :for="msg.msgId" class="messages">{{ msg.messageText }}</div>
+                <div :for="msg.msgId" class="messages">{{ msg.user }}: {{ msg.messageText }}</div>
             </div>
             <form id="messageForm">
                 <div class="form-group">
@@ -39,22 +39,21 @@
         methods: {
             openConnection(userName, chatWindow) {
                 socket.emit('new user', userName, (data) => {
-                    console.log(userName);
                     if (data) {
                         chatWindow.classList.remove('windowHide');
                         chatWindow.classList.add('windowShow');
-                        console.log(data + " from server");
                     }
                 })
             },
             sendMessage() {
                 socket.emit('send message', this.message);
+                this.message = null;
             },
             addNewMessage(data) {
                 this.messages.push({
                     msgId: ++this.counter,
                     messageText: data.message,
-                    user: data.username
+                    user: data.user
                 })
             }
         },
