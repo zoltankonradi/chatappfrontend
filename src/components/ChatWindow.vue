@@ -2,13 +2,15 @@
     <div id="messageArea" class="row windowHide">
         <div class="col-md-4">
             <div class="well">
-                <h3>Online users</h3>
-                <ul class="list-group" id="users"></ul>
+                <h3>Online users({{ this.users.length }})</h3>
+                <ul class="list-group" id="users">
+                    <li v-for="user in users" :key="user.userId">{{ user.userName }}</li>
+                </ul>
             </div>
         </div>
         <div class="col-md-8">
-            <div v-for="msg in messages" :key="msg.msgId" class="chat" id="chat">
-                <div :for="msg.msgId" class="messages">{{ msg.user }}: {{ msg.messageText }}</div>
+            <div class="chat" id="chat">
+                <div v-for="msg in messages" :key="msg.msgId" class="messages">{{ msg.user }}: {{ msg.messageText }}</div>
             </div>
             <form id="messageForm">
                 <div class="form-group">
@@ -23,7 +25,7 @@
 </template>
 
 <script>
-    const socket = io.connect('http://localhost:8081/');
+    const socket = io.connect(process.env.PORT ||'http://localhost:8081/');
     import io from 'socket.io-client';
     export default {
         name: "ChatWindow",
@@ -34,6 +36,9 @@
             });
             socket.on('new message', (data) => {
                 this.addNewMessage(data);
+            });
+            socket.on('get users', (data) => {
+                this.addNewUser(data);
             });
         },
         methods: {
@@ -55,13 +60,24 @@
                     messageText: data.message,
                     user: data.user
                 })
+            },
+            addNewUser(data) {
+                this.users = [];
+                for (let user of data) {
+                    this.users.push({
+                        userId: ++this.userCounter,
+                        userName: user
+                    });
+                }
             }
         },
         data() {
             return {
                 counter: 0,
+                userCounter: 0,
                 message: null,
-                messages: []
+                messages: [],
+                users: []
             }
         }
     }
